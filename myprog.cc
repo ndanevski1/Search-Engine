@@ -4,12 +4,32 @@
 #include <vector>
 #include <algorithm>
 #include <sstream>
+#include <fstream>
+#include <cassert>
+#include <map>
 // #include "common.h"
 
 using namespace std;
 
-void word_tokenize(string s, std::vector<string>& tokens){
-    std::string punctuation = "!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ ";
+const string STOPWORD_FILE = "stopwords.txt";
+
+set<string> read_stopwords(string file_name){
+    ifstream file(file_name);
+
+    set<string> stopwords;
+    string reader;
+    while(file >> reader){
+        stopwords.insert(reader);
+    }
+    return stopwords;
+}
+
+bool is_stopword(string s, set<string>& stopwords){
+    return stopwords.count(s);
+}
+
+void word_tokenize(string s, vector<string>& tokens){
+    string punctuation = "!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ ";
     char is_punctuation[256];
     for(int i = 0; i < 256; i++){
         is_punctuation[i] = 0;
@@ -18,7 +38,7 @@ void word_tokenize(string s, std::vector<string>& tokens){
         is_punctuation[c] = true;
     }
 
-    std::string curr_word = "";
+    string curr_word = "";
     cout << curr_word << '\n';
     for(char c : s){
         if(is_punctuation[c]){
@@ -36,47 +56,48 @@ void word_tokenize(string s, std::vector<string>& tokens){
 }
 
 int main(int argc, char **argv) {
-    if(argc < 2) {
-        cerr << "Usage: <idxname>" << endl;
+    if(argc < 3) {
+        cerr << "Usage: metadata_indexer <dataset_metadata> <index_name>" << endl;
         exit(0);
     }
 
-    char *idxname = argv[1];
+    char *dataset_title = argv[1];
+    vector<string> lines;
+    ifstream dataset(dataset_title);
+
+    string reader;
+    while(getline(dataset, reader)){
+        lines.push_back(reader);
+    }
+
+    set<string> stopword_set = read_stopwords(STOPWORD_FILE);
+
+    assert(lines.size() % 2 == 0);
+
+    char *idxname = argv[2];
     Xapian::WritableDatabase db(idxname, Xapian::DB_CREATE_OR_OPEN);
     Xapian::Document doc;
 
-    vector<string> words;
-    words.push_back("john's awefawe.");
-    words.push_back("a brave new world world");
+    for(auto ite = lines.begin(); ite != lines.end(); ite++){
+        string name = *ite;
+        ite++;
+        string description = *ite;
 
-    long lineno = 0;
-    for(vector<string>::iterator it = words.begin();
-                                 it != words.end();
-                                 it++, lineno++) {
-        cout << "line " << lineno << ": ";
-        string &s = *it;
-
-        // perform tokenization
-        vector<string> tokens;
-        word_tokenize(s, tokens);
-
-        // populate the document
-        // value[0] will be the original line
         doc.clear_terms();
         doc.clear_values();
-        doc.add_value(0, string(s));
-        // document is the bag of terms
-        for(vector<string>::iterator it_token=tokens.begin();
-            it_token != tokens.end();
-            it_token++) {
-            string &token = *it_token;
-            cout << token << " ";
-            doc.add_term(token);
+
+        // add terms to document
+        vector<string> tokens;
+        word_tokenize(description, tokens);
+        for(string token : tokens){
+            if(!is_stopword(token, stopword_set)){
+                doc.add_term(token);
+            }
         }
-        cout << endl;
+
+        // add name to document
+        doc.add_value(0, name);
+
         db.add_document(doc);
-        if(lineno % 1000 == 0) {
-            db.commit();
-        }
     }
 }
