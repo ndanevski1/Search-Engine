@@ -39,7 +39,6 @@ void word_tokenize(string s, vector<string>& tokens){
     }
 
     string curr_word = "";
-    cout << curr_word << '\n';
     for(char c : s){
         if(is_punctuation[c]){
             if(curr_word != ""){
@@ -100,4 +99,6 @@ int main(int argc, char **argv) {
 
         db.add_document(doc);
     }
+
+    db.commit();
 }
