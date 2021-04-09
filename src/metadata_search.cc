@@ -9,24 +9,11 @@
 #include <map>
 #include <cstdlib>
 
+#include "common.h"
+
 using namespace std;
 
 const string STOPWORD_FILE = "stopwords.txt";
-
-set<string> read_stopwords(string file_name){
-    ifstream file(file_name);
-
-    set<string> stopwords;
-    string reader;
-    while(file >> reader){
-        stopwords.insert(reader);
-    }
-    return stopwords;
-}
-
-bool is_stopword(string s, set<string>& stopwords){
-    return stopwords.count(s);
-}
 
 string word_highlighter(string& s, set<string>& highlight_words){
     string punctuation = "!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ ";
@@ -44,9 +31,9 @@ string word_highlighter(string& s, set<string>& highlight_words){
         if(is_punctuation[c]){
             if(curr_word != ""){
                 if(highlight_words.count(curr_word)){
-                    total += "033[1;31m";
+                    total += "\033[1;31m";
                     total += curr_word;
-                    total += "033[1;0m";
+                    total += "\033[1;0m";
                 } else {
                     total += curr_word;
                 }
@@ -59,9 +46,9 @@ string word_highlighter(string& s, set<string>& highlight_words){
     }
     if(curr_word != ""){
         if(highlight_words.count(curr_word)){
-            total += "033[1;31m";
+            total += "\033[1;31m";
             total += curr_word;
-            total += "033[1;0m";
+            total += "\033[1;0m";
         } else {
             total += curr_word;
         }
