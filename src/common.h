@@ -1,5 +1,5 @@
-#ifndef COMMON_H
-#define COMMON_H
+#ifndef COMMON
+#define COMMON
 
 #include <string>
 #include <set>

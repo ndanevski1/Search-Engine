@@ -8,6 +8,8 @@
 #include <cassert>
 #include <map>
 
+#include "common.h"
+
 using namespace std;
 
 const string STOPWORD_FILE = "stopwords.txt";
