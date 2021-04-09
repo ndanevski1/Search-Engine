@@ -11,6 +11,65 @@
 
 using namespace std;
 
+const string STOPWORD_FILE = "stopwords.txt";
+
+set<string> read_stopwords(string file_name){
+    ifstream file(file_name);
+
+    set<string> stopwords;
+    string reader;
+    while(file >> reader){
+        stopwords.insert(reader);
+    }
+    return stopwords;
+}
+
+bool is_stopword(string s, set<string>& stopwords){
+    return stopwords.count(s);
+}
+
+string word_highlighter(string& s, set<string>& highlight_words){
+    string punctuation = "!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ ";
+    char is_punctuation[256];
+    for(int i = 0; i < 256; i++){
+        is_punctuation[i] = 0;
+    }
+    for(char c : punctuation){
+        is_punctuation[c] = true;
+    }
+
+    string total = "";
+    string curr_word = "";
+    for(char c : s){
+        if(is_punctuation[c]){
+            if(curr_word != ""){
+                if(highlight_words.count(curr_word)){
+                    total += "033[1;31m";
+                    total += curr_word;
+                    total += "033[1;0m";
+                } else {
+                    total += curr_word;
+                }
+            }
+            total += c;
+            curr_word = "";
+        } else {
+            curr_word.push_back(c);
+        }
+    }
+    if(curr_word != ""){
+        if(highlight_words.count(curr_word)){
+            total += "033[1;31m";
+            total += curr_word;
+            total += "033[1;0m";
+        } else {
+            total += curr_word;
+        }
+    }
+
+    return total;
+}
+
 int main(int argc, char **argv) {
     if(argc < 4) {
         cerr << "Usage: metadata_search <index_name> <top-k> <keyword1> <keyword2> ..." << endl;
@@ -65,10 +124,24 @@ int main(int argc, char **argv) {
     Xapian::MSet matches = enquire.get_mset(0, top_k);
     printf("mset size is %d\n", matches.size());
 
+    set<string> highlight_words;
+    for(auto s : queryAND_keywords){
+        highlight_words.insert(s);
+    }
+    for(auto s : queryOR_keywords){
+        highlight_words.insert(s);
+    }
+    set<string> stopword_set = read_stopwords(STOPWORD_FILE);
+    for(auto s : stopword_set){
+        highlight_words.erase(s);
+    }
+
     for(Xapian::MSetIterator match = matches.begin(); match != matches.end(); match ++) {
         Xapian::Document doc = match.get_document();
         string value0 = doc.get_value(0);
         cout << value0 << endl;
+        string description = doc.get_value(1);
+        cout << word_highlighter(description, highlight_words) << endl;
     }
 
     return 0;
