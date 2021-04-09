@@ -95,6 +95,7 @@ int main(int argc, char **argv) {
 
         // add name to document
         doc.add_value(0, name);
+        doc.add_value(1, description);
 
         db.add_document(doc);
     }
