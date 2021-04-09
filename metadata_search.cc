@@ -8,10 +8,8 @@
 #include <cassert>
 #include <map>
 #include <cstdlib>
-// #include "common.h"
 
 using namespace std;
-
 
 int main(int argc, char **argv) {
     if(argc < 4) {
@@ -23,7 +21,7 @@ int main(int argc, char **argv) {
     vector<string> keywords;
     for(int i = 3; i < argc; i++)
         keywords.push_back(argv[i]);
-        
+
     vector<string> queryAND_keywords, queryOR_keywords;
 
     for(auto keyword: keywords) {
@@ -33,9 +31,11 @@ int main(int argc, char **argv) {
             queryOR_keywords.push_back(keyword);
     }
 
+    bool initialized_query = false;
     Xapian::Query query;
-    
+
     if(queryOR_keywords.size() != 0) {
+        initialized_query = true;
         query = Xapian::Query(
             Xapian::Query::OP_OR,
             queryOR_keywords.begin(),
@@ -43,34 +43,30 @@ int main(int argc, char **argv) {
         );
     }
 
-    for(auto keyword_and: queryAND_keywords) {
-        if(queryOR_keywords.size() == 0) {
-            query = Xapian::Query(
-                Xapian::Query::OP_AND,
-                queryAND_keywords.begin(),
-                queryAND_keywords.end()
-            );
-        }
-        else {
-            query &= Xapian::Query(
-                Xapian::Query::OP_AND,
-                queryAND_keywords.begin(),
-                queryAND_keywords.end()
-            );
-        }
+    assert(queryOR_keywords.size() > 0 or queryAND_keywords.size() > 0);
+    if(!initialized_query and queryAND_keywords.size() > 0){
+        initialized_query = true;
+        query = Xapian::Query(
+            Xapian::Query::OP_AND,
+            queryAND_keywords.begin(),
+            queryAND_keywords.end()
+        );
+    } else if (queryAND_keywords.size() > 0){
+        query &= Xapian::Query(
+            Xapian::Query::OP_AND,
+            queryAND_keywords.begin(),
+            queryAND_keywords.end()
+        );
     }
-    
-
-
 
     Xapian::Enquire enquire(db);
     enquire.set_query(query);
-    
-    Xapian::MSet matches = enquire.get_mset(0, top_k); 
+
+    Xapian::MSet matches = enquire.get_mset(0, top_k);
     printf("mset size is %d\n", matches.size());
 
     for(Xapian::MSetIterator match = matches.begin(); match != matches.end(); match ++) {
-        Xapian::Document doc = match.get_document();    
+        Xapian::Document doc = match.get_document();
         string value0 = doc.get_value(0);
         cout << value0 << endl;
     }
