@@ -8,24 +8,11 @@
 #include <cassert>
 #include <map>
 
+#include "common.h"
+
 using namespace std;
 
 const string STOPWORD_FILE = "stopwords.txt";
-
-set<string> read_stopwords(string file_name){
-    ifstream file(file_name);
-
-    set<string> stopwords;
-    string reader;
-    while(file >> reader){
-        stopwords.insert(reader);
-    }
-    return stopwords;
-}
-
-bool is_stopword(string s, set<string>& stopwords){
-    return stopwords.count(s);
-}
 
 void word_tokenize(string s, vector<string>& tokens){
     string punctuation = "!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ ";
