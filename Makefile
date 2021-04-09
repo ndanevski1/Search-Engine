@@ -1,7 +1,6 @@
 # Makefile
-CC = g++
+CC = g++ `~/.local/bin/xapian-config --cxxflags --libs`
 OBJ = metadata_indexer metadata_search keyword_search
-
 OBJS = $(OBJDIR)/common.o $(OBJDIR)/metadata_indexer.o $(OBJDIR)/metadata_search.o $(OBJDIR)/keyword_search.o
 OBJDIR = obj
 SRCDIR = src
@@ -22,3 +21,4 @@ all: $(OBJ)
 
 clean:
 	rm -r -f $(OBJ) obj index
+
