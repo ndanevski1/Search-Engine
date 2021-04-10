@@ -40,36 +40,53 @@ set<string> create_random_set(Xapian::Database db, int set_cardinality) {
     return s;
 }
 
-
-vector<set<string>> create_sets_to_compare(Xapian::Database db, int set_cardinality, int number_of_sets) {
-    vector<set<string>> v;
-    srand(time(0));
-    for(int i = 0; i < number_of_sets; i++)
-        v.push_back(create_random_set(db, set_cardinality));
-    return v;
-}
 int main(int argc, char **argv) {
-    if(argc < 4) {
-        cerr << "Usage: keyword_search <index_name> <top-k> <set_cardinality>" << endl;
+    if(argc < 5) {
+        cerr << "Usage: keyword_search <index_name> <top-k> <set_cardinality> <repeat_count>" << endl;
         exit(0);
     }
     Xapian::Database db(argv[1]);
     int top_k = atoi(argv[2]);
     int set_cardinality = atoi(argv[3]);
+    int repeat_count = atoi(argv[4]);
 
-    set<string> query_set = create_random_set(db, set_cardinality);
-    int number_of_sets = 30;
-    vector<set<string>> sets_to_compare = create_sets_to_compare(db, set_cardinality, number_of_sets);
-
-    cout << "Printing query set: ";
-    for(auto s: query_set)
-        cout << s << " ";
-
-    cout << endl;
-    for(auto v: sets_to_compare) {
-        for(auto s: v)
+    srand(time(0));
+    for(int repeats = 1; repeats <= repeat_count; repeats++){
+        set<string> query_set = create_random_set(db, set_cardinality);
+        cout << "Printing query set: ";
+        for(auto s: query_set)
             cout << s << " ";
-        cout << endl;
+        cout << '\n';
+
+        Xapian::Query query = Xapian::Query(
+            Xapian::Query::OP_OR,
+            query_set.begin(),
+            query_set.end()
+        );
+
+        Xapian::Enquire enquire(db);
+        enquire.set_query(query);
+        Xapian::CoordWeight weighting_scheme = Xapian::CoordWeight();
+        weighting_scheme.init(1.0);
+        enquire.set_weighting_scheme(weighting_scheme);
+
+        Xapian::MSet matches = enquire.get_mset(0, top_k);
+        printf("mset size is %d\n", matches.size());
+
+        set<string> highlight_words = query_set;
+        set<string> stopword_set = read_stopwords(STOPWORD_FILE);
+        for(auto s : stopword_set){
+            highlight_words.erase(s);
+        }
+
+        for(Xapian::MSetIterator match = matches.begin(); match != matches.end(); match ++) {
+            Xapian::Document doc = match.get_document();
+            string value0 = doc.get_value(0);
+            cout << value0 << endl;
+            string description = doc.get_value(1);
+            cout << word_highlighter(description, highlight_words) << endl;
+        }
+
     }
 
     return 0;
