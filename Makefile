@@ -1,4 +1,4 @@
-CC = g++ `~/.local/bin/xapian-config --cxxflags --libs`
+CC = g++ `~/.local/bin/xapian-config --cxxflags --libs` $(CXXFLAGS)
 OBJ = metadata_indexer metadata_search keyword_search
 OBJS = $(OBJDIR)/common.o
 OBJDIR = obj
@@ -23,4 +23,3 @@ test_xapian:
 
 clean:
 	rm -r -f $(OBJ) obj index
-

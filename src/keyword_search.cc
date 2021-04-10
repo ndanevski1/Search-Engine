@@ -23,10 +23,16 @@ set<string> create_random_set(Xapian::Database db, int set_cardinality) {
         Xapian::Document doc = db.get_document(random_doc);
         int doc_terms_count = doc.termlist_count();
         int random_term_index = get_random_number(doc_terms_count);
-        int j = 0;
         string random_term = "";
-        for(auto it = doc.termlist_begin(); j < random_term_index && it != doc.termlist_end(); j++, it++)
-            random_term = *it;
+        auto ite = doc.termlist_begin();
+        for(int j = 0; j < random_term_index; j++){
+            ite++;
+            if(ite == doc.termlist_end()){
+                break;
+            }
+        }
+        assert(ite != doc.termlist_end());
+        random_term = *ite;
         s.insert(random_term);
     }
     return s;
@@ -35,6 +41,7 @@ set<string> create_random_set(Xapian::Database db, int set_cardinality) {
 
 vector<set<string>> create_sets_to_compare(Xapian::Database db, int set_cardinality, int number_of_sets) {
     vector<set<string>> v;
+    srand(time(0));
     for(int i = 0; i < number_of_sets; i++)
         v.push_back(create_random_set(db, set_cardinality));
     return v;
