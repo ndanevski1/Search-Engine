@@ -77,31 +77,25 @@ int main(int argc, char **argv) {
             queryOR_keywords.push_back(keyword);
     }
 
-    bool initialized_query = false;
+    Xapian::Query queryAND = Xapian::Query(
+        Xapian::Query::OP_AND,
+        queryAND_keywords.begin(),
+        queryAND_keywords.end()
+    );
+    Xapian::Query queryOR = Xapian::Query(
+        Xapian::Query::OP_OR,
+        queryOR_keywords.begin(),
+        queryOR_keywords.end()
+    );
+
     Xapian::Query query;
-
-    if(queryOR_keywords.size() != 0) {
-        initialized_query = true;
+    if(queryAND_keywords.empty()){
+        query = queryOR;
+    } else {
         query = Xapian::Query(
-            Xapian::Query::OP_OR,
-            queryOR_keywords.begin(),
-            queryOR_keywords.end()
-        );
-    }
-
-    assert(queryOR_keywords.size() > 0 or queryAND_keywords.size() > 0);
-    if(!initialized_query and queryAND_keywords.size() > 0){
-        initialized_query = true;
-        query = Xapian::Query(
-            Xapian::Query::OP_AND,
-            queryAND_keywords.begin(),
-            queryAND_keywords.end()
-        );
-    } else if (queryAND_keywords.size() > 0){
-        query &= Xapian::Query(
-            Xapian::Query::OP_AND,
-            queryAND_keywords.begin(),
-            queryAND_keywords.end()
+            Xapian::Query::OP_AND_MAYBE,
+            queryAND,
+            queryOR
         );
     }
 
