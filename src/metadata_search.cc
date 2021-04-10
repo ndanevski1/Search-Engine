@@ -8,16 +8,21 @@
 #include <cassert>
 #include <map>
 #include <cstdlib>
+#include <chrono>
 
 #include "common.hpp"
 
 using namespace std;
+using namespace std::chrono;
 
 int main(int argc, char **argv) {
     if(argc < 4) {
         cerr << "Usage: metadata_search <index_name> <top-k> <keyword1> <keyword2> ..." << endl;
         exit(0);
     }
+
+    auto start_time = high_resolution_clock::now();
+    
     Xapian::Database db(argv[1]);
     int top_k = atoi(argv[2]);
     vector<string> keywords;
@@ -80,6 +85,10 @@ int main(int argc, char **argv) {
         string description = doc.get_value(1);
         cout << word_highlighter(description, highlight_words) << endl;
     }
+    auto end_time = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(end_time - start_time);
+
+    std::cerr << "METADATA SEARCH TIME: " << duration.count() << " microseconds." << std::endl;
 
     return 0;
 }

@@ -9,10 +9,12 @@
 #include <map>
 #include <cstdlib>
 #include <random>
+#include <chrono>
 
 #include "common.hpp"
 
 using namespace std;
+using namespace std::chrono;
 
 int get_random_number(int high) {
     return rand() % high;
@@ -45,6 +47,7 @@ int main(int argc, char **argv) {
         cerr << "Usage: keyword_search <index_name> <top-k> <set_cardinality> <repeat_count>" << endl;
         exit(0);
     }
+    auto start_time = high_resolution_clock::now();
     Xapian::Database db(argv[1]);
     int top_k = atoi(argv[2]);
     int set_cardinality = atoi(argv[3]);
@@ -88,6 +91,9 @@ int main(int argc, char **argv) {
         }
 
     }
+    auto end_time = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(end_time - start_time);
 
+    std::cerr << "SIMILARITY SEARCH TIME: " << duration.count() << " microseconds." << std::endl;
     return 0;
 }

@@ -7,10 +7,12 @@
 #include <fstream>
 #include <cassert>
 #include <map>
+#include <chrono>
 
 #include "common.hpp"
 
 using namespace std;
+using namespace std::chrono;
 
 void word_tokenize(string s, vector<string>& tokens){
     string punctuation = "!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ ";
@@ -43,6 +45,7 @@ int main(int argc, char **argv) {
         cerr << "Usage: metadata_indexer <dataset_metadata> <index_name>" << endl;
         exit(0);
     }
+    auto start_time = high_resolution_clock::now();
 
     char *dataset_title = argv[1];
     vector<string> lines;
@@ -86,4 +89,8 @@ int main(int argc, char **argv) {
     }
 
     db.commit();
+    auto end_time = high_resolution_clock::now();
+    auto duration = duration_cast<microseconds>(end_time - start_time);
+
+    std::cerr << "INDEXING TIME: " << duration.count() << " microseconds." << std::endl;
 }
