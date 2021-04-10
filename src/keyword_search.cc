@@ -10,6 +10,8 @@
 #include <cstdlib>
 #include <random>
 
+#include "common.hpp"
+
 using namespace std;
 
 int get_random_number(int high) {

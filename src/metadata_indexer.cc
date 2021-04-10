@@ -8,11 +8,9 @@
 #include <cassert>
 #include <map>
 
-#include "common.h"
+#include "common.hpp"
 
 using namespace std;
-
-const string STOPWORD_FILE = "stopwords.txt";
 
 void word_tokenize(string s, vector<string>& tokens){
     string punctuation = "!\"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~ ";
